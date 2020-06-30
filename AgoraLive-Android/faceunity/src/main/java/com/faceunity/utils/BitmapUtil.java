@@ -72,7 +72,7 @@ public class BitmapUtil {
                         int texturePixel = data[offset1 + j];
                         int blue = (texturePixel >> 16) & 0xff;
                         int red = (texturePixel << 16) & 0x00ff0000;
-                        int pixel = (texturePixel & 0xff00ff00) | red | blue | 0xff000000;
+                        int pixel = (texturePixel & 0xff00ff00) | red | blue;
                         bitmapSource[offset2 + j] = pixel;
                     }
                 }
@@ -89,86 +89,58 @@ public class BitmapUtil {
         GLES20.glDeleteFramebuffers(1, mFrameBuffers, 0);
     }
 
-    public interface OnReadBitmapListener {
-        void onReadBitmapListener(Bitmap bitmap);
+    /**
+     * 加载本地图片
+     *
+     * @param path
+     * @param reqWidth
+     * @param reqHeight
+     * @return
+     */
+    public static Bitmap loadBitmap(String path, int reqWidth, int reqHeight) {
+        Bitmap bitmap = decodeSampledBitmapFromFile(path, reqWidth, reqHeight);
+        int orientation = getPhotoOrientation(path);
+        return rotateBitmap(bitmap, orientation);
     }
 
     /**
-     * load本地图片
+     * 旋转 Bitmap
      *
-     * @param path
-     * @param screenWidth
-     * @param screenHeight
+     * @param bitmap
+     * @param orientation
      * @return
      */
-    public static Bitmap loadBitmap(String path, int screenWidth, int screenHeight) {
-        int degree = getBitmapDegree(path);
-        Bitmap bitmap = compressBitmapByScreen(path, screenWidth, screenHeight);
-        return rotateBitmap(bitmap, degree);
-    }
-
-    public static Bitmap compressBitmapByScreen(String path, int screenWidth, int screenHeight) {
-        BitmapFactory.Options opt = new BitmapFactory.Options();
-        // 这个isjustdecodebounds很重要
-        opt.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path, opt);
-        // 获取到这个图片的原始宽度和高度
-        int picWidth = opt.outWidth;
-        int picHeight = opt.outHeight;
-        // isSampleSize是表示对图片的缩放程度，比如值为2图片的宽度和高度都变为以前的1/2
-        opt.inSampleSize = 1;
-        // 根据屏的大小和图片大小计算出缩放比例
-        double radio = opt.outWidth / (double) opt.outHeight;
-        Log.i("PhotoRenderer", "loadBitmap: width:" + opt.outWidth + ", height:" + opt.outHeight);
-        if (radio == 3 / (double) 4) {
-            opt.inSampleSize = calculateInSampleSize(opt, screenWidth, screenHeight);
-        } else if (radio == 9 / (double) 16) {
-            opt.inSampleSize = calculateInSampleSize(opt, screenWidth, screenHeight);
-        } else if (radio == (double) 1) {
-            opt.inSampleSize = calculateInSampleSize(opt, screenWidth, screenHeight);
-        } else {
-            if (picWidth > picHeight) {
-                if (picHeight > screenWidth) {
-                    opt.inSampleSize = calculateInSampleSize(opt, screenWidth, screenHeight);
-                }
-            } else {
-                if (picWidth > screenWidth) {
-                    opt.inSampleSize = calculateInSampleSize(opt, screenWidth, screenHeight);
-                }
-            }
-        }
-        Log.i("PhotoRenderer", "loadBitmap: inSampleSize:" + opt.inSampleSize);
-        // 这次再真正地生成一个有像素的，经过缩放了的bitmap
-        opt.inJustDecodeBounds = false;
-        return BitmapFactory.decodeFile(path, opt);
-    }
-
-    public static Bitmap rotateBitmap(Bitmap bitmap, int degree) {
-        if (degree == 90 || degree == 180 || degree == 270) {
+    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+        if (orientation == 90 || orientation == 180 || orientation == 270) {
             Matrix matrix = new Matrix();
-            matrix.postRotate(degree);
+            matrix.postRotate(orientation);
             bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
         }
         return bitmap;
     }
 
-    public static int getBitmapDegree(String path) {
-        int degree = 0;
-        int orientation;
+    /**
+     * 获取图片的方向
+     *
+     * @param path
+     * @return
+     */
+    public static int getPhotoOrientation(String path) {
+        int orientation = 0;
+        int tagOrientation = 0;
         try {
-            orientation = new ExifInterface(path).getAttributeInt(ExifInterface.TAG_ORIENTATION, -1);
+            tagOrientation = new ExifInterface(path).getAttributeInt(ExifInterface.TAG_ORIENTATION, -1);
         } catch (IOException e) {
-            Log.e(TAG, "getBitmapDegree: ", e);
-            orientation = 0;
+            Log.e(TAG, "getPhotoOrientation: ", e);
         }
-        if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
-            degree = 90;
-        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
-            degree = 180;
-        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
-            degree = 270;
+        if (tagOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            orientation = 90;
+        } else if (tagOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            orientation = 180;
+        } else if (tagOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            orientation = 270;
         }
-        return degree;
+        return orientation;
     }
 
     /**
@@ -177,50 +149,46 @@ public class BitmapUtil {
      * @param path
      * @param screenWidth
      * @return
-     * @throws IOException
      */
     public static Bitmap loadBitmap(String path, int screenWidth) {
-        int degree = 0;
-        int orientation;
-        try {
-            orientation = new ExifInterface(path).getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
-        } catch (IOException e) {
-            Log.e(TAG, "loadBitmap: ", e);
-            orientation = 0;
-        }
-        if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
-            degree = 90;
-        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
-            degree = 180;
-        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
-            degree = 270;
-        }
         BitmapFactory.Options opt = new BitmapFactory.Options();
-        // 这个isjustdecodebounds很重要
         opt.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(path, opt);
-        // 获取到这个图片的原始宽度和高度
         int picWidth = opt.outWidth;
         int picHeight = opt.outHeight;
-        // isSampleSize是表示对图片的缩放程度，比如值为2图片的宽度和高度都变为以前的1/2
         opt.inSampleSize = 1;
         // 根据屏的大小和图片大小计算出缩放比例
         if (picWidth > picHeight) {
-            if (picHeight > screenWidth)
+            if (picHeight > screenWidth) {
                 opt.inSampleSize = picHeight / screenWidth;
+            }
         } else {
-            if (picWidth > screenWidth)
+            if (picWidth > screenWidth) {
                 opt.inSampleSize = picWidth / screenWidth;
+            }
         }
-        // 这次再真正地生成一个有像素的，经过缩放了的bitmap
         opt.inJustDecodeBounds = false;
         Bitmap bitmap = BitmapFactory.decodeFile(path, opt);
-        if (degree == 90 || degree == 180 || degree == 270) {
-            Matrix matrix = new Matrix();
-            matrix.postRotate(degree);
-            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        }
+        int orientation = getPhotoOrientation(path);
+        bitmap = rotateBitmap(bitmap, orientation);
         return bitmap;
+    }
+
+    /**
+     * bitmap 转 NV21 数据
+     *
+     * @param inputWidth
+     * @param inputHeight
+     * @param scaled
+     * @return
+     */
+    public static byte[] getNV21(int inputWidth, int inputHeight, Bitmap scaled) {
+        int[] argb = new int[inputWidth * inputHeight];
+        scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
+        byte[] yuv = new byte[inputHeight * inputWidth + 2 * (int) Math.ceil((float) inputHeight / 2) * (int) Math.ceil((float) inputWidth / 2)];
+        encodeYUV420SP(yuv, argb, inputWidth, inputHeight);
+        scaled.recycle();
+        return yuv;
     }
 
     private static int calculateInSampleSize(
@@ -298,23 +266,6 @@ public class BitmapUtil {
     }
 
     /**
-     * bitmap 转 NV21 数据
-     *
-     * @param inputWidth
-     * @param inputHeight
-     * @param scaled
-     * @return
-     */
-    public static byte[] getNV21(int inputWidth, int inputHeight, Bitmap scaled) {
-        int[] argb = new int[inputWidth * inputHeight];
-        scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
-        byte[] yuv = new byte[inputHeight * inputWidth + 2 * (int) Math.ceil(inputHeight / 2.0) * (int) Math.ceil(inputWidth / 2.0)];
-        encodeYUV420SP(yuv, argb, inputWidth, inputHeight);
-        scaled.recycle();
-        return yuv;
-    }
-
-    /**
      * ARGB 转 NV21 数据
      *
      * @param yuv420sp
@@ -326,11 +277,11 @@ public class BitmapUtil {
         final int frameSize = width * height;
         int yIndex = 0;
         int uvIndex = frameSize;
-        int a, R, G, B, Y, U, V;
+        int A, R, G, B, Y, U, V;
         int index = 0;
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
-                a = (argb[index] & 0xff000000) >> 24; // a is not used obviously
+                A = (argb[index] & 0xff000000) >> 24; // a is not used obviously
                 R = (argb[index] & 0xff0000) >> 16;
                 G = (argb[index] & 0xff00) >> 8;
                 B = (argb[index] & 0xff) >> 0;
@@ -353,7 +304,29 @@ public class BitmapUtil {
         }
     }
 
-    public static byte[] loadPhotoRGBABytes(Bitmap bitmap) {
+    /**
+     * 获取 Bitmap 的宽高
+     *
+     * @param path
+     * @return
+     */
+    public static Point getBitmapSize(String path) {
+        Point point = new Point();
+        BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, opt);
+        point.x = opt.outWidth;
+        point.y = opt.outHeight;
+        return point;
+    }
+
+    /**
+     * 获取 Bitmap 的 RGBA 字节数组
+     *
+     * @param bitmap
+     * @return
+     */
+    public static byte[] copyRgbaByteFromBitmap(Bitmap bitmap) {
         if (bitmap == null) {
             return null;
         }
@@ -363,14 +336,13 @@ public class BitmapUtil {
         return bytes;
     }
 
-    public static Point getBitmapSize(String path) {
-        Point point = new Point();
-        BitmapFactory.Options opt = new BitmapFactory.Options();
-        opt.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(path, opt);
-        point.x = opt.outWidth;
-        point.y = opt.outHeight;
-        return point;
+    public interface OnReadBitmapListener {
+        /**
+         * 读取图片完成
+         *
+         * @param bitmap
+         */
+        void onReadBitmapListener(Bitmap bitmap);
     }
 
     /**
@@ -400,6 +372,6 @@ public class BitmapUtil {
 
     private static boolean isEmptyBitmap(final Bitmap src) {
         return src == null || src.getWidth() == 0 || src.getHeight() == 0;
-
     }
+
 }

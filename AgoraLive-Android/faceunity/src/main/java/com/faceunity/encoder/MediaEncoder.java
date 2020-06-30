@@ -193,11 +193,6 @@ public abstract class MediaEncoder implements Runnable {
      */
     protected void release() {
         if (DEBUG) Log.e(TAG, "release:");
-        try {
-            mListener.onStopped(this);
-        } catch (final Exception e) {
-            Log.e(TAG, "failed onStopped", e);
-        }
         mIsCapturing = false;
         if (mMediaCodec != null) {
             try {
@@ -219,6 +214,13 @@ public abstract class MediaEncoder implements Runnable {
             }
         }
         mBufferInfo = null;
+        if (mListener != null) {
+            try {
+                mListener.onStopped(this);
+            } catch (final Exception e) {
+                Log.e(TAG, "failed onStopped", e);
+            }
+        }
     }
 
     protected void signalEndOfInputStream() {

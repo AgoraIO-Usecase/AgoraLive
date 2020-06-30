@@ -1,6 +1,8 @@
 package com.faceunity.utils;
 
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -10,16 +12,31 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
  * @author Richie on 2018.08.30
  */
 public class FileUtils {
+    /**
+     * 拍照后的临时保存路径，用于下一步的编辑
+     */
+    private static final String TMP_PHOTO_NAME = "photo.jpg";
+    /**
+     * 海报换脸模板文件的文件夹
+     */
+    public static final String TEMPLATE_PREFIX = "template_";
+    /**
+     * 表情动图模板文件的文件夹
+     */
+    private static final String LIVE_PHOTO_PREFIX = "live_photo";
     private static final String TAG = "FileUtils";
 
     private FileUtils() {
@@ -58,6 +75,35 @@ public class FileUtils {
         }
         return null;
     }
+
+    public static String saveTempBitmap(Bitmap bitmap, File file) throws IOException {
+        if (file.exists()) {
+            file.delete();
+        }
+        Bitmap.CompressFormat format = Bitmap.CompressFormat.JPEG;
+        int quality = 100;
+        OutputStream stream = null;
+        try {
+            stream = new FileOutputStream(file);
+            bitmap.compress(format, quality, stream);
+            stream.flush();
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
+        return file.getAbsolutePath();
+    }
+
+    public static File getSavePathFile(Context context) {
+        File file = new File(getExternalFileDir(context), TMP_PHOTO_NAME);
+        return file;
+    }
+
+    public static String getSavePath(Context context) {
+        return getSavePathFile(context).getAbsolutePath();
+    }
+
     public static void copyFile(File src, File dest) throws IOException {
         copyFile(new FileInputStream(src), dest);
     }
@@ -74,9 +120,12 @@ public class FileUtils {
         try {
             bis = new BufferedInputStream(is);
             bos = new BufferedOutputStream(new FileOutputStream(dest));
-            byte[] bytes = new byte[bis.available()];
-            bis.read(bytes);
-            bos.write(bytes);
+            byte[] bytes = new byte[1024 * 10];
+            int length;
+            while ((length = bis.read(bytes)) != -1) {
+                bos.write(bytes, 0, length);
+            }
+            bos.flush();
         } finally {
             if (bos != null) {
                 bos.close();
@@ -85,6 +134,24 @@ public class FileUtils {
                 bis.close();
             }
         }
+    }
+
+    /**
+     * 海报换脸的素材存储目录
+     *
+     * @param context
+     * @return
+     */
+    public static File getChangeFaceTemplatesDir(Context context) {
+        File fileDir = getExternalFileDir(context);
+        File templates = new File(fileDir, "change_face");
+        if (!templates.exists()) {
+            boolean b = templates.mkdirs();
+            if (!b) {
+                return fileDir;
+            }
+        }
+        return templates;
     }
 
     /**
@@ -115,6 +182,30 @@ public class FileUtils {
         return cacheDir;
     }
 
+    public static File getThumbnailDir(Context context) {
+        File fileDir = getExternalFileDir(context);
+        File thumbDir = new File(fileDir, "thumb");
+        if (!thumbDir.exists()) {
+            thumbDir.mkdirs();
+        }
+        return thumbDir;
+    }
+
+    /**
+     * 表情动图的文件夹
+     *
+     * @param context
+     * @return
+     */
+    public static File getLivePhotoDir(Context context) {
+        File fileDir = getExternalFileDir(context);
+        File photoDir = new File(fileDir, LIVE_PHOTO_PREFIX);
+        if (!photoDir.exists()) {
+            photoDir.mkdirs();
+        }
+        return photoDir;
+    }
+
     /**
      * 生成唯一标示
      *
@@ -129,7 +220,6 @@ public class FileUtils {
      *
      * @param file
      * @return
-     * @throws Exception
      */
     public static String getMd5ByFile(File file) throws Exception {
         FileInputStream in = null;
@@ -158,6 +248,58 @@ public class FileUtils {
             if (is != null) {
                 is.close();
             }
+        }
+    }
+
+    public static void copyAssetsLivePhotoTemplate(Context context) {
+        try {
+            AssetManager assets = context.getAssets();
+            String photoTemplate = "live_photo";
+            String[] paths = assets.list(photoTemplate);
+            if (paths != null) {
+                for (String path : paths) {
+                    if (path.startsWith("template_")) {
+                        String photoDir = photoTemplate + File.separator + path;
+                        String[] photos = assets.list(photoDir);
+                        File dir = new File(FileUtils.getLivePhotoDir(context), path);
+                        if (photos != null) {
+                            for (String photo : photos) {
+                                String p = photoDir + File.separator + photo;
+                                FileUtils.copyAssetsFile(context, dir, p);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "copyAssetsLivePhotoTemplate: ", e);
+        }
+    }
+
+    public static void copyAssetsChangeFaceTemplate(Context context) {
+        try {
+            AssetManager assets = context.getAssets();
+            String baseDirPath = "change_face";
+            String[] paths = assets.list(baseDirPath);
+            List<String> tempPaths = new ArrayList<>(16);
+            for (String path : paths) {
+                if (path.startsWith(TEMPLATE_PREFIX)) {
+                    tempPaths.add(path);
+                }
+            }
+            for (String tempPath : tempPaths) {
+                String path = baseDirPath + File.separator + tempPath;
+                String[] list = assets.list(path);
+                for (String s : list) {
+                    File dir = new File(FileUtils.getChangeFaceTemplatesDir(context), tempPath);
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    copyAssetsFile(context, dir, path + File.separator + s);
+                }
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "copyAssetsChangeFaceTemplate: ", e);
         }
     }
 
@@ -223,10 +365,13 @@ public class FileUtils {
         BufferedOutputStream bos = null;
         try {
             bis = new BufferedInputStream(new FileInputStream(srcFile));
-            byte[] bytes = new byte[bis.available()];
-            bis.read(bytes);
             bos = new BufferedOutputStream(new FileOutputStream(dest));
-            bos.write(bytes);
+            byte[] bytes = new byte[1024 * 10];
+            int length;
+            while ((length = bis.read(bytes)) != -1) {
+                bos.write(bytes, 0, length);
+            }
+            bos.flush();
         } finally {
             if (bos != null) {
                 bos.close();
