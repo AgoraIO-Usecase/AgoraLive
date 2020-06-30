@@ -23,7 +23,9 @@ public class MediaAudioFileEncoder extends MediaEncoder {
 
     @Override
     protected void prepare() throws IOException {
-        if (DEBUG) Log.v(TAG, "prepare:");
+        if (DEBUG) {
+            Log.v(TAG, "prepare:");
+        }
         mTrackIndex = -1;
         mMuxerStarted = mIsEOS = false;
         mMediaExtractor = new MediaExtractor();
@@ -31,8 +33,11 @@ public class MediaAudioFileEncoder extends MediaEncoder {
 
         MediaMuxerWrapper muxer = mWeakMuxer.get();
         //分离出音轨和视轨
-        Log.d(TAG, "getTrackCount: " + mMediaExtractor.getTrackCount());
-        for (int i = 0; i < mMediaExtractor.getTrackCount(); i++) {
+        int trackCount = mMediaExtractor.getTrackCount();
+        if (DEBUG) {
+            Log.d(TAG, "getTrackCount: " + trackCount);
+        }
+        for (int i = 0; i < trackCount; i++) {
             MediaFormat format = mMediaExtractor.getTrackFormat(i);
             String mime = format.getString(MediaFormat.KEY_MIME);
             if (mime.startsWith(AUDIO)) {
@@ -61,17 +66,27 @@ public class MediaAudioFileEncoder extends MediaEncoder {
         if (!muxer.start()) {
             // we should wait until muxer is ready
             synchronized (muxer) {
-                while (!muxer.isStarted())
+                while (!muxer.isStarted()) {
                     try {
                         muxer.wait(100);
                     } catch (InterruptedException e) {
+                        // ignored
                     }
+                }
             }
+        }
+        if (mTrackIndex < 0) {
+            release();
+            return;
         }
         mMuxerStarted = true;
         boolean first = false;
         long startWhen = 0;
         while (true) {
+            if (mRequestStop) {
+                release();
+                break;
+            }
             int sampleSize = mMediaExtractor.readSampleData(mInputBuffer, 0);
             long timeStamp = mMediaExtractor.getSampleTime();
             int flags = mMediaExtractor.getSampleFlags();
@@ -82,10 +97,11 @@ public class MediaAudioFileEncoder extends MediaEncoder {
                 }
                 try {
                     long sleepTime = (timeStamp / 1000) - (System.currentTimeMillis() - startWhen);
-                    if (sleepTime > 0)
+                    if (sleepTime > 0) {
                         Thread.sleep(sleepTime);
+                    }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // ignored
                 }
                 mBufferInfo.set(0, sampleSize, getPTSUs(), flags);
                 muxer.writeSampleData(mTrackIndex, mInputBuffer, mBufferInfo);
@@ -99,6 +115,9 @@ public class MediaAudioFileEncoder extends MediaEncoder {
 
     @Override
     protected void release() {
+        if (DEBUG) {
+            Log.d(TAG, "release: ");
+        }
         super.release();
         if (mMediaExtractor != null) {
             mMediaExtractor.release();

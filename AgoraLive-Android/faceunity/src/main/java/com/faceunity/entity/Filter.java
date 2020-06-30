@@ -1,7 +1,5 @@
 package com.faceunity.entity;
 
-import android.text.TextUtils;
-
 /**
  * 本demo中滤镜的实体类
  * Created by tujh on 2018/2/7.
@@ -12,13 +10,13 @@ public class Filter {
      */
     public static final float DEFAULT_FILTER_LEVEL = 0.7f;
 
-    public Filter(String filterName, int resId, int description) {
-        this.filterName = filterName;
+    private String name;
+
+    public Filter(String name, int resId, int description) {
+        this.name = name;
         this.resId = resId;
         this.description = description;
     }
-
-    private String filterName;
     private int resId;
     private int description;
 
@@ -26,22 +24,41 @@ public class Filter {
         return new Filter(name);
     }
 
-    public Filter(String filterName) {
-        this.filterName = filterName;
+    public Filter(String name) {
+        this.name = name;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         Filter filter = (Filter) o;
-        return !TextUtils.isEmpty(filterName) && filterName.equals(filter.filterName());
+        return name != null ? name.equals(filter.name) : filter.name == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + resId;
+        result = 31 * result + description;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Filter{" +
+                "name='" + name + '\'' +
+                ", resId=" + resId +
+                ", description=" + description +
+                '}';
     }
 
     public String filterName() {
-        return filterName;
+        return name;
     }
 
     public int resId() {
@@ -110,17 +127,4 @@ public class Filter {
         public static final String GEXING_10 = "gexing10";
     }
 
-    @Override
-    public int hashCode() {
-        return !TextUtils.isEmpty(filterName) ? filterName.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return "Filter{" +
-                "filterName='" + filterName + '\'' +
-                ", resId=" + resId +
-                ", description=" + description +
-                '}';
-    }
 }
