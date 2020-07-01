@@ -31,16 +31,16 @@ jobs:
           secureFile: 'bg.bundle'
 
       - task: DownloadSecureFile@1
-          name: downloadGirlBundle
-          displayName: 'Download girl bundle'
-          inputs:
-            secureFile: 'girl.bundle'
+        name: downloadGirlBundle
+        displayName: 'Download girl bundle'
+        inputs:
+          secureFile: 'girl.bundle'
 
       - task: DownloadSecureFile@1
-          name: downloadHashiqiBundle
-          displayName: 'Download hashiqi bundle'
-          inputs:
-            secureFile: 'hashiqi.bundle'
+        name: downloadHashiqiBundle
+        displayName: 'Download hashiqi bundle'
+        inputs:
+          secureFile: 'hashiqi.bundle'
 
       - script: |
           cd ${{ parameters.project }} && chmod +x ./build-templates/build-release.sh && ./build-templates/build-release.sh
