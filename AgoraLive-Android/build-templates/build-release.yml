@@ -1,0 +1,64 @@
+parameters:
+  project: ''
+  name: ''
+
+jobs:
+
+  - job: ${{ parameters.name }}_Build
+    displayName: ${{ parameters.mame }}
+    pool:
+      vmImage: 'macos-latest'
+    variables:
+      - group: AgoraLive
+
+    steps:
+      - task: DownloadSecureFile@1
+        name: downloadReleaseKeystore
+        displayName: 'Download release keystore'
+        inputs:
+          secureFile: 'beckon-release.keystore'
+
+      - task: DownloadSecureFile@1
+        name: downloadAuthpack
+        displayName: 'Download face unity authpack'
+        inputs:
+          secureFile: 'authpack.java'
+
+      - task: DownloadSecureFile@1
+        name: downloadBgBundle
+        displayName: 'Download background bundle'
+        inputs:
+          secureFile: 'bg.bundle'
+
+      - task: DownloadSecureFile@1
+        name: downloadGirlBundle
+        displayName: 'Download girl bundle'
+        inputs:
+          secureFile: 'girl.bundle'
+
+      - task: DownloadSecureFile@1
+        name: downloadHashiqiBundle
+        displayName: 'Download hashiqi bundle'
+        inputs:
+          secureFile: 'hashiqi.bundle'
+
+      - script: |
+          cd ${{ parameters.project }} && chmod +x ./build-templates/build-release.sh && ./build-templates/build-release.sh
+        env:
+          keystore: $(downloadReleaseKeystore.secureFilePath)
+          password: $(keystore.pass)
+          alias: $(keystore.alias)
+          authpack: $(downloadAuthpack.secureFilePath)
+          bg: $(downloadBgBundle.secureFilePath)
+          girl: $(downloadGirlBundle.secureFilePath)
+          hashiqi: $(downloadHashiqiBundle.secureFilePath)
+
+      - task: CopyFiles@2
+        inputs:
+          Contents: '**/*.apk'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: ./AgoraLive-Android/app/build/outputs/apk/release/app-release.apk
+          ArtifactName: ${{ parameters.name }}
