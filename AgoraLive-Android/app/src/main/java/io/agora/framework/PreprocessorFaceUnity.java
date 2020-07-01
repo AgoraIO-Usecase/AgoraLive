@@ -94,14 +94,14 @@ public class PreprocessorFaceUnity implements IPreprocessor, CameraVideoChannel.
     }
 
     private void initAnimoji() {
-        mHaskiEffect = new Effect("haski", -1, "hashiqi_Animoji.bundle",
+        mHaskiEffect = new Effect("haski", -1, "hashiqi.bundle",
                 1, Effect.EFFECT_TYPE_ANIMOJI, -1);
-        mGirlEffect = new Effect("qgirl", -1, "qgirl.bundle",
+        mGirlEffect = new Effect("qgirl", -1, "girl.bundle",
                 1, Effect.EFFECT_TYPE_ANIMOJI, -1);
 
-        mEffectAnimojiHaskiHandle = mFURenderer.loadItem("hashiqi_Animoji.bundle");
-        mEffectAnimojiGirlHandle = mFURenderer.loadItem("qgirl.bundle");
-        mEffectBackgroundHandle = mFURenderer.loadItem("white_bg.bundle");
+        mEffectAnimojiHaskiHandle = mFURenderer.loadItem("hashiqi.bundle");
+        mEffectAnimojiGirlHandle = mFURenderer.loadItem("girl.bundle");
+        mEffectBackgroundHandle = mFURenderer.loadItem("bg.bundle");
         mBeautyHandle = mFURenderer.loadItem("face_beautification.bundle");
     }
 
