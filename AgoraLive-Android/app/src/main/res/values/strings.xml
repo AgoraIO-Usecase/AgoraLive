@@ -127,9 +127,9 @@
     <string name="live_room_tool_action_sheet_title">Tool</string>
     <string-array name="live_room_action_sheet_tool_names">
         <item>Data</item>
-        <item>Setting</item>
         <item>Speaker</item>
         <item>EarMonitor</item>
+        <item>Setting</item>
         <item>Rotate</item>
         <item>Camera</item>
     </string-array>

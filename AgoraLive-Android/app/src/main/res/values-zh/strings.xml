@@ -130,9 +130,9 @@
 
     <string-array name="live_room_action_sheet_tool_names">
         <item>实时数据</item>
-        <item>设置</item>
         <item>麦克风</item>
         <item>耳返</item>
+        <item>设置</item>
         <item>翻转</item>
         <item>摄像头</item>
     </string-array>

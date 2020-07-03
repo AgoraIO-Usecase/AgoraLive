@@ -26,20 +26,20 @@ public class LiveRoomToolActionSheet extends AbstractActionSheet {
 
     private static final int GRID_SPAN = 4;
     private static final int FUNC_COUNT_AUDIENCE = 1;
-    private static final int FUNC_COUNT_VIRTUAL_IMAGE = 4;
+    private static final int FUNC_COUNT_VIRTUAL_IMAGE = 3;
 
     private static final int DATA_INDEX = 0;
-    private static final int SETTING_INDEX = 1;
-    private static final int SPEAKER_INDEX = 2;
-    private static final int EAR_MONITOR = 3;
+    private static final int SPEAKER_INDEX = 1;
+    private static final int EAR_MONITOR = 2;
+    private static final int SETTING_INDEX = 3;
     private static final int ROTATE_INDEX = 4;
     private static final int VIDEO_INDEX = 5;
 
     private static final int[] ICON_RES = {
             R.drawable.icon_data,
-            R.drawable.icon_setting,
             R.drawable.action_sheet_tool_speaker,
             R.drawable.action_sheet_tool_ear_monitor,
+            R.drawable.icon_setting,
             R.drawable.icon_rotate,
             R.drawable.action_sheet_tool_video
     };
