@@ -39,7 +39,7 @@ configurations {
 }
 
 dependencies {
-    def agora_rtc_version = "3.0.1"
+    def agora_rtc_version = "3.0.1.1"
     def agora_rtm_version = "1.2.2"
     def lifecycle_version = "2.2.0"
     def navigation_version = "2.2.1"
