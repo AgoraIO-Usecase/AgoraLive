@@ -125,11 +125,6 @@ public class VideoCaptureCamera2 extends VideoCapture {
         @Override
         public void onClosed(CameraCaptureSession cameraCaptureSession) {
             Log.d(TAG, "CameraPreviewSessionListener.onClosed");
-
-            // The preview session gets closed temporarily when a takePhoto
-            // request is being processed. A new preview session will be
-            // started after that.
-            mPreviewSession = null;
         }
     };
 
