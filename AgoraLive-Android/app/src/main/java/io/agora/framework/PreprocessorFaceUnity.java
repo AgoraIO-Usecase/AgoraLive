@@ -4,6 +4,7 @@ import android.content.Context;
 import android.opengl.GLES20;
 
 import com.faceunity.FURenderer;
+import com.faceunity.authpack;
 import com.faceunity.entity.Effect;
 
 import io.agora.capture.video.camera.CameraVideoChannel;
@@ -33,6 +34,7 @@ public class PreprocessorFaceUnity implements IPreprocessor, CameraVideoChannel.
     private FURenderer mFURenderer;
     private Context mContext;
     private boolean mEnabled;
+    private boolean mAuthenticated = true;
 
     private Effect mHaskiEffect;
     private Effect mGirlEffect;
@@ -47,7 +49,6 @@ public class PreprocessorFaceUnity implements IPreprocessor, CameraVideoChannel.
 
     public PreprocessorFaceUnity(Context context) {
         mContext = context;
-        mEnabled = true;
     }
 
     @Override
@@ -67,6 +68,11 @@ public class PreprocessorFaceUnity implements IPreprocessor, CameraVideoChannel.
 
     @Override
     public void initPreprocessor() {
+        if (authpack.A() == null) {
+            mAuthenticated = false;
+            return;
+        }
+
         mFURenderer = new FURenderer.Builder(mContext).
                 inputImageFormat(FURenderer.FU_ADM_FLAG_EXTERNAL_OES_TEXTURE)
                 .setNeedAnimoji3D(true)
@@ -87,10 +93,16 @@ public class PreprocessorFaceUnity implements IPreprocessor, CameraVideoChannel.
                 mBundleListener.onFuEffectBundleLoaded();
             }
         });
+
         initAnimoji();
 
         // Enable beautification by default
+        mEnabled = true;
         enableBeauty();
+    }
+
+    public boolean FUAuthenticated() {
+        return mAuthenticated;
     }
 
     private void initAnimoji() {
@@ -138,7 +150,7 @@ public class PreprocessorFaceUnity implements IPreprocessor, CameraVideoChannel.
 
     @Override
     public void enablePreProcess(boolean enabled) {
-        mEnabled = enabled;
+        if (mAuthenticated) mEnabled = enabled;
     }
 
     @Override

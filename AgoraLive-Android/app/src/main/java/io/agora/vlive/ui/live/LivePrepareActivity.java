@@ -93,7 +93,7 @@ public class LivePrepareActivity extends LiveBaseActivity implements View.OnClic
         mNameTooLongToastMsg = String.format(getResources().getString(
                 R.string.live_prepare_name_too_long_toast_format), MAX_NAME_LENGTH);
 
-        mStartBroadBtn = findViewById(R.id.live_room_action_sheet_gift_send_btn);
+        mStartBroadBtn = findViewById(R.id.live_prepare_go_live_btn);
         mCloseBtn = findViewById(R.id.live_prepare_close);
         mSwitchBtn = findViewById(R.id.live_prepare_switch_camera);
         mRandomBtn = findViewById(R.id.random_btn);
@@ -116,6 +116,7 @@ public class LivePrepareActivity extends LiveBaseActivity implements View.OnClic
 
         mLocalPreviewLayout = findViewById(R.id.local_preview_layout);
         changeUIStyles();
+        checkFUAuth();
     }
 
     private void changeUIStyles() {
@@ -157,6 +158,16 @@ public class LivePrepareActivity extends LiveBaseActivity implements View.OnClic
         }
     }
 
+    private void checkFUAuth() {
+        if (mPreprocessor != null &&
+                !mPreprocessor.FUAuthenticated()) {
+            showLongToast(getString(R.string.no_fu_auth_notice));
+            if (tabId == Config.LIVE_TYPE_VIRTUAL_HOST) {
+                mStartBroadBtn.setEnabled(false);
+            }
+        }
+    }
+
     private void tryInitializeVideo() {
         if (mVideoInitCount >= 2) {
             return;
@@ -188,7 +199,7 @@ public class LivePrepareActivity extends LiveBaseActivity implements View.OnClic
             case R.id.random_btn:
                 setRandomRoomName();
                 break;
-            case R.id.live_room_action_sheet_gift_send_btn:
+            case R.id.live_prepare_go_live_btn:
                 gotoBroadcastActivity();
                 break;
             case R.id.live_prepare_beauty_btn:

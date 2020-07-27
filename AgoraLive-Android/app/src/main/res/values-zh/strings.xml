@@ -54,6 +54,7 @@
     <string name="go_live_text">开始直播</string>
     <string name="live_prepare_name_too_long_toast_format">房间名称不能超过%d个字符</string>
     <string name="live_prepare_no_room_name">请输入您的房间名称</string>
+    <string name="no_fu_auth_notice">没有找到相芯美颜的授权信息</string>
 
     <!-- Live -->
     <string name="live_bottom_edit_hint">说点什么 &#8230;</string>

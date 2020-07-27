@@ -86,7 +86,7 @@
             android:scaleType="fitXY"
             android:background="@drawable/round_dark_gray_bg"/>
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/live_room_action_sheet_gift_send_btn"
+            android:id="@+id/live_prepare_go_live_btn"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/button_height"
             android:layout_toEndOf="@id/live_prepare_beauty_btn"
@@ -103,7 +103,7 @@
             android:id="@+id/live_prepare_setting_btn"
             android:layout_width="@dimen/bottom_btn_size"
             android:layout_height="@dimen/bottom_btn_size"
-            android:layout_toEndOf="@id/live_room_action_sheet_gift_send_btn"
+            android:layout_toEndOf="@id/live_prepare_go_live_btn"
             android:layout_marginStart="@dimen/bottom_btn_padding"
             android:layout_centerVertical="true"
             android:src="@drawable/setting_button"

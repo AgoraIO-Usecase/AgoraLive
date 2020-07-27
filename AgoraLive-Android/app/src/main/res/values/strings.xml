@@ -50,6 +50,7 @@
     <string name="go_live_text">Go Live</string>
     <string name="live_prepare_name_too_long_toast_format">Room name cannot be longer than %d characters</string>
     <string name="live_prepare_no_room_name">Please enter your room name</string>
+    <string name="no_fu_auth_notice">No FaceUnity authentication found</string>
 
     <!-- Live -->
     <string name="live_bottom_edit_hint">Say something &#8230;</string>
